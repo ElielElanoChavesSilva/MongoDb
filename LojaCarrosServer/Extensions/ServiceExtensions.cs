@@ -1,28 +1,36 @@
-using LojinhaServer.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MongoDB.Driver;
+using LojaCarrosServer.Models;
+using LojaCarrosServer.Repositories;
+using LojinhaServer.Repositories;
 
 namespace LojaCarrosServer.Extensions;
 public static class ServiceExtensions
 {
-    public static void ConfigureCors(this IServiceCollection services) 
-    { 
-        services.AddCors(StringSplitOptions => {
-            StringSplitOptions.AddPolicy("CorsPolicy",
-            builderas => builderas.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    public static void ConfigureCors(this IServiceCollection services)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("CorsPolicy",
+            builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
         });
     }
 
-    public static void ConfigureMongoDBSettings(this IServiceCollection services){
+    public static void ConfigureMongoDBSettings(this IServiceCollection services, IConfiguration config)
+    {
         services.Configure<MongoDBSettings>(
-            ConfigureCors.GetSection("MongoDBSettings")
+            config.GetSection("MongoDBSettings")
         );
 
-        services.AddSingleton<IMongoDatabase>(options => {
-            var settings = ConfigureCors.GetSection("MongoDBSettings").Get<MongoDBSettings>();
-            var client = new MongoClient(settings.DatabaseName);
+        services.AddSingleton<IMongoDatabase>(options =>
+        {
+            var settings =
+            config.GetSection("MongoDBSettings").Get<MongoDBSettings>();
+            var client = new MongoClient(settings.ConnectionString);
+            return client.GetDatabase(settings.DatabaseName);
         });
+    }
+    public static void ConfigureProductRepository(this IServiceCollection services)
+    {
+        services.AddSingleton<IProductRepository, ProductRepository>();
     }
 }

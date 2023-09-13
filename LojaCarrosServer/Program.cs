@@ -1,8 +1,11 @@
+using LojaCarrosServer.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.ConfigureMongoDBSettings(builder.Configuration);
+builder.Services.ConfigureProductRepository();
 
 // Add services to the container.
-builder.Service.ConfigureMongoDBSettings(builder.ConfigureMongoDBSettings);
-
+builder.Services.ConfigureMongoDBSettings(builder.Configuration);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

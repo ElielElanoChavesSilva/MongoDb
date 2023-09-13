@@ -1,32 +1,59 @@
+using LojaCarrosServer.Colletions;
+using LojaCarrosServer.Repositories;
+using LojinhaServer.Repositories;
 using Microsoft.AspNetCore.Mvc;
-
-namespace LojaCarrosServer.Controllers;
-
+namespace LojinhaServer.Controllers;
 [ApiController]
-[Route("[controller]")]
-public class WeatherForecastController : ControllerBase
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
 {
-    private static readonly string[] Summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-    {
-        _logger = logger;
-    }
-
-    [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
-    {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
-    }
+private readonly IProductRepository _repo;
+public ProductsController(IProductRepository repo)
+{
+_repo = repo;
+}
+[HttpGet]
+public async Task<IActionResult> Get()
+{
+var product = await _repo.GetAllAsync();
+return Ok(product);
+}
+[HttpGet]
+[Route("{id}")]
+public async Task<IActionResult> Get(string id)
+{
+var product = await _repo.GetByIdAsync(id);
+if (product == null)
+{
+return NotFound();
+}
+return Ok(product);
+}[HttpPost]
+public async Task<IActionResult> Post(Product product)
+{
+await _repo.CreateAsync(product);
+return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
+}
+[HttpPut]
+public async Task<IActionResult> Put(Product product)
+{
+var oldProduct = await _repo.GetByIdAsync(product.Id);
+if (oldProduct == null)
+{
+return NotFound();
+}
+await _repo.UpdateAsync(product);
+return NoContent();
+}
+[HttpDelete]
+public async Task<IActionResult> Delete(string id)
+{
+var product = await _repo.GetByIdAsync(id);
+if (product == null)
+{
+return NotFound();
+}
+await _repo.DeleteAsync(id);
+return NoContent();
+}
 }
